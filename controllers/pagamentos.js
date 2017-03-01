@@ -4,6 +4,68 @@ module.exports = function(app) {
 		res.send('Ok Raí');
 	});
 
+	app.delete('/pagamentos/pagamento/:id', function(req, res) {
+		var pagamento = {};
+		var id = req.params.id;
+
+		pagamento.id = id;
+		pagamento.status = 'CANCELADO';
+
+		var connection = app.persistencia.connectionFactory();
+		var pagamentoDao = new app.persistencia.PagamentoDao(connection);
+
+		pagamentoDao.atualiza(pagamento, function(erro) {
+			if (erro) {
+				res.status(500).send(erro);
+				return;
+			}
+			console.log('pagamento cancelado');
+			res.status(202).json(pagamento);
+
+		});
+	});
+
+	/*
+	app.delete('/pagamentos/pagamento/:id', function(req, res){
+	    var pagamento = {};
+	    var id = req.params.id;
+
+	    pagamento.id = id;
+	    pagamento.status = 'CANCELADO';
+
+	    var connection = app.persistencia.connectionFactory();
+	    var pagamentoDao = new app.persistencia.PagamentoDao(connection);
+
+	    pagamentoDao.atualiza(pagamento, function(erro){
+	        if (erro){
+	          res.status(500).send(erro);
+	          return;
+	        }
+	        console.log('pagamento cancelado');
+	        res.status(204).send(pagamento);
+	    });
+	  });
+	*/
+
+	app.put('/pagamentos/pagamento/:id', function(req, res) {
+		var pagamento = {};
+		var id = req.params.id;
+
+		pagamento.id = id;
+		pagamento.status = 'CONFIRMADO';
+
+		var connection = app.persistencia.connectionFactory();
+		var pagamentoDao = new app.persistencia.PagamentoDao(connection);
+		pagamentoDao.atualiza(pagamento, function(erro) {
+			if (erro) {
+				res.status(500).send(erro);
+				return;
+			} else {
+				res.send(pagamento);
+			}
+		});
+	});
+
 	app.post('/pagamentos/pagamento', function(req, res) {
 		var pagamento = req.body;
 		pagamento.status = 'CRIADO';
@@ -22,13 +84,25 @@ module.exports = function(app) {
 		var connection = app.persistencia.connectionFactory();
 		var pagamentoDao = new app.persistencia.PagamentoDao(connection);
 		pagamentoDao.salva(pagamento, function(erro, resultado) {
-			if(erro) {
+			if (erro) {
 				res.status(500).send(errors);
-			}
-			else{
-				console.log('Pagamento criado');
-				//res.location('/pagamentos/pagamento/' + resultado.insertId);
-				res.status(201).json(resultado);
+			} else {
+				pagamento.id = resultado.insertId;
+				res.location('/pagamentos/pagamento/' + pagamento.id);
+				var response = {
+					links: [{
+							href: "http://localhost:3000/pagamentos/pagamento/" + pagamento.id,
+							rel: "confirmar",
+							method: "PUT"
+						}, {
+							href: "http://localhost:3000/pagamentos/pagamento/" + pagamento.id,
+							rel: "cancelar",
+							method: "DELETE"
+						}
+
+					]
+				}
+				res.status(201).json(response);
 			}
 		});
 	});
