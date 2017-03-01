@@ -22,7 +22,9 @@
   },
   "homepage": "https://github.com/rai-vitor/payfast#readme",
   "dependencies": {
+    "body-parser": "^1.16.1",
     "consign": "^0.1.2",
-    "express": "^4.14.1"
+    "express": "^4.14.1",
+    "mysql": "^2.13.0"
   }
 }
